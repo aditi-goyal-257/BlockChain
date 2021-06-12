@@ -43,12 +43,14 @@ function toBytesInt32 (num) {
     return arr;
 }
 
-function toBytesInt64 (num) {
-	let arr = new ArrayBuffer(8);
-	let view = new DataView(arr);
-	view.setBigUint64(0,num,false);
-	return arr;
+function toBytesInt64 (num){
+    var buffer = new ArrayBuffer(8);
+    var dataview = new DataView(buffer);
+    dataview.setBigUint64(0, num);
+    return buffer;
 }
+
+
 function convertToBin(transaction) {
     //8 for time stamp, 4 for input length, inputs, 4 for output length
     //For each input, 32 for id, 4 for index, 4 for sign length
@@ -61,6 +63,8 @@ function convertToBin(transaction) {
 	for(i=0;i<transaction.num_out;i++){
 		total_length+=transaction.outputs[i].length;
 	}
+	
+	//io.write(total_length);
 
 	data = new Uint8Array(total_length);
 	var offset = 8;
@@ -101,8 +105,9 @@ function convertToBin(transaction) {
 	for(i=0;i<transaction.num_out;i++){
 
 		let coins = transaction.outputs[i].coins;
-		temp = new Uint8Array(toBytesInt64(coins));
+		temp = new Uint8Array(toBytesInt64(BigInt(coins)));
 		data.set(temp,offset);
+		//io.write(temp);
 		offset+=8;
 
 		let length = transaction.outputs[i].length;
@@ -118,7 +123,7 @@ function convertToBin(transaction) {
 	}
 
 	//setting timestamp
-	temp = new Uint8Array(toBytesInt64(BigInt(now())));
+	temp = toBytesInt64(BigInt(now()));
 	data.set(temp,0);
 
 	//setting id
@@ -126,7 +131,7 @@ function convertToBin(transaction) {
     let data_final = new Uint8Array(data.length+transaction_id.length);
     data_final.set(transaction_id,0);
     data_final.set(data,32);
-    fs.writeFileSync('data_final.dat',data_final);
+    fs.writeFileSync('abcde.dat',data_final);
 
 }
 
@@ -141,10 +146,10 @@ async function main(){
 		var id = await io.read();
 
 		io.write("Enter output index of input "+ i);
-		var index = await io.read();
+		var index = parseInt(await io.read());
 
 		io.write("Enter length of signature of input "+i);
-		var length = await io.read();
+		var length = parseInt(await io.read());
 
 		io.write("Enter signature (in hex) of input "+i);
 		var sign = await io.read();
@@ -158,16 +163,16 @@ async function main(){
 	
 	for(let i=1;i<=num_out;i++){
 		io.write("Enter number of coins for output "+ i);
-		var coins= await io.read();
+		var coins= BigInt(await io.read());
 
 		io.write("Enter length of key of output "+i);
-		var length = await io.read();
+		var length = parseInt(await io.read());
 
 		io.write("Enter path to public key of output "+i);
 		var path = await io.read();
 		var key = fs.readFileSync(path, 'utf-8');
 
-		let temp_output = new Output(index,length,key);
+		let temp_output = new Output(coins,length,key);
 		outputs.push(temp_output);
 	}
 
