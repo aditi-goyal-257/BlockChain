@@ -94,7 +94,7 @@ function convert(binary) {
 
 		output = new Output()
 		output.coins = tobignt(binary.slice(offset,offset+8));
-		io.write(binary.slice(offset,offset+8))
+		//io.write(binary.slice(offset,offset+8))
 		offset+=8;
 
 		output.length = toInt(binary.slice(offset,offset+4));
