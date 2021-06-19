@@ -37,7 +37,7 @@ var outputs = [];
 
 //functions
 function toInt (arr) {
-    let ans = 0;
+       ans = 0;
 	for(let i=3;i>=0;i--){
 	    ans+= Math.pow(2,8*(3-i))*arr[i]
 	}
@@ -47,7 +47,7 @@ function toInt (arr) {
 function tobignt (arr) {
        ans = BigInt(0);
 	for(let i=7;i>=0;i--){
-	    ans+= BigInt(Math.pow(2,8*(7-i))*arr[i])
+	    ans+= BigInt(Math.pow(2,8*(7-i)))*BigInt(arr[i])
 	}
 	return ans;
 }
@@ -57,16 +57,13 @@ function convert(binary) {
     //For each output, 8 for coins, 4 for key length
         transaction = new Transaction();
         offset = 0;
-        buff = binary.slice(0,32)
-        transaction.id = buff.toString('hex')
-        //io.write(transaction.id)
-        offset+=32;
+       
         transaction.timestamp = tobignt(binary.slice(offset,offset+8))
         offset+=8;
-        
+  
+      
         transaction.num_in = toInt(binary.slice(offset,offset+4))
         offset+=4
-        //io.write(transaction.num_in)
 
 
 	for(i=0;i<transaction.num_in;i++){
@@ -80,11 +77,13 @@ function convert(binary) {
 		input.length = toInt(binary.slice(offset,offset+4));
 		offset+=4;
 
-		input.sign =binary.slice(offset,offset+input.length/2).toString('hex');
-		offset+=input.length/2;
+		input.sign =binary.slice(offset,offset+input.length).toString('hex');
+		offset+=input.length;
 		inputs.push(input)
 
+
 	}
+	
 	
 	transaction.num_out = toInt(binary.slice(offset,offset+4))
         offset+=4
@@ -109,6 +108,7 @@ function convert(binary) {
 
 	transaction.inputs = inputs
 	transaction.outputs = outputs
+	transaction.id = crypto.createHash('sha256').update(binary).digest('hex');
 	return transaction
 
 }
@@ -119,27 +119,30 @@ async function main(){
 	var path = await io.read();
 	
 	bin_data = fs.readFileSync(path)
-	convert(bin_data)
+	transaction = convert(bin_data)
 	
-	
-       io.write("Transaction id: "+ transaction.id)
        io.write("Timestamp: "+ transaction.timestamp)
+       io.write("Transaction ID: "+ transaction.id)
+       
        
        io.write("Number of inputs: "+transaction.num_in)
 	
-	for(let i=0;i<transaction.num_in;i++){
-		io.write("ID for transaction "+ i+" is: " +transaction.inputs[i].id)
-		io.write("Index for transaction "+ i+" is: " +transaction.inputs[i].index)
-		io.write("Length for transaction "+ i+" is:"+ transaction.inputs[i].length)
-		io.write("Sign for transaction "+ i+" is: "+ transaction.inputs[i].sign)
+	for(let i=1;i<=transaction.num_in;i++){
+	        io.write("Input "+ i)
+		io.write("Transaction ID: " +transaction.inputs[i-1].id)
+		io.write("Index: " +transaction.inputs[i-1].index)
+		io.write("Length of signature: "+ transaction.inputs[i-1].length)
+		io.write("Signature: "+ transaction.inputs[i-1].sign)
 
 	}
+	
 	io.write("Number of outputs: "+transaction.num_out)
 	
-	for(let i=0;i<transaction.num_out;i++){
-		io.write("Coins for transaction "+ i+" is: " +transaction.outputs[i].coins)
-		io.write("Length for transaction "+ i+" is: " +transaction.outputs[i].length)
-		io.write("Sign for transaction "+ i+" is: " +transaction.outputs[i].key)
+	for(let i=1;i<=transaction.num_out;i++){
+	        io.write("Output "+ i)
+		io.write("Number of coins: " +transaction.outputs[i-1].coins)
+		io.write("Length of public key: " +transaction.outputs[i-1].length)
+		io.write("Public key: "+transaction.outputs[i-1].key)
 	}
 	
 	
