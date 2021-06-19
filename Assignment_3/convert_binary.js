@@ -46,7 +46,7 @@ function toBytesInt32 (num) {
 function toBytesInt64 (num){
     var buffer = new ArrayBuffer(8);
     var dataview = new DataView(buffer);
-    dataview.setBigUint64(0, num);
+    dataview.setBigUint64(0, num,false);
     return buffer;
 }
 
@@ -94,7 +94,7 @@ function convertToBin(transaction) {
 		let sign = transaction.inputs[i].sign;
 		temp = new Uint8Array(Buffer.from(sign,'hex'));
 		data.set(temp,offset);
-		offset+=length/2;
+		offset+=length;
 
 	}
      
@@ -125,13 +125,7 @@ function convertToBin(transaction) {
 	//setting timestamp
 	temp = toBytesInt64(BigInt(now()));
 	data.set(temp,0);
-
-	//setting id
-    let transaction_id = crypto.createHash('sha256').update(data).digest();
-    let data_final = new Uint8Array(data.length+transaction_id.length);
-    data_final.set(transaction_id,0);
-    data_final.set(data,32);
-    fs.writeFileSync('abcde.dat',data_final);
+        fs.writeFileSync('binary_data.dat',data);
 
 }
 
@@ -177,7 +171,7 @@ async function main(){
 	}
 
 	let transaction = new Transaction(num_in, inputs, num_out, outputs);
-    convertToBin(transaction);
+        convertToBin(transaction);
 
 }
 main();
