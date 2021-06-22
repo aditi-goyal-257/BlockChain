@@ -1,0 +1,11 @@
+{
+  "name": "assignment_5",
+  "version": "1.0.0",
+  "description": "Input for find_block_nonce.js:",
+  "main": "find_block_nonce.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aditi Goyal",
+  "license": "ISC"
+}
